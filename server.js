@@ -62,7 +62,7 @@ app.post("/charge", async (req, res) => {
 
 
 app.post("/update", async (req, res) => {
-  const response = req.body
+  const response = JSON.parse(req.body)
   console.log(req.body)
   var token ="";
   const url = 'https://athena.au.auth0.com/oauth/token';
