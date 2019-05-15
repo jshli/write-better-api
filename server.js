@@ -77,7 +77,6 @@ app.post("/update", async (req, res) => {
     "audience":"https://athena.au.auth0.com/api/v2/",
     "grant_type":"client_credentials" 
   }
-  
   axios.post(url, data, options)
   .then(result => {
     token = result.data["access_token"]
@@ -93,6 +92,7 @@ app.post("/update", async (req, res) => {
     .then(result => res.send(result))
     .catch(err => res.status(500).json(err))
   })
+  .then(result => res.send(result))
   .catch(err => res.status(500).json(err))
 })
 
