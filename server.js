@@ -88,7 +88,7 @@ app.post("/update", async (req, res) => {
     }
     axios.patch(patchOptions.url, patchOptions.data, patchOptions)
     .then(result => res.send(result))
-    .catch(err => res.status(500).end())
+    .catch(err => res.status(500).json({err: "nah it errors here"}))
   })
   .catch(err => res.status(500).json({err: "it errors here"}))
 })
