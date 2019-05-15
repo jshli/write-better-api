@@ -84,7 +84,7 @@ app.post("/update", async (req, res) => {
     var patchOptions = {
       url: `https://athena.au.auth0.com/api/v2/users/${response.userId}`,
       headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      data: `{"app_metadata": {"books":${JSON.stringify(response.bookIds)}}}`
+      data: `{"app_metadata": {"books":${response.bookIds}}}`
     }
     axios.patch(patchOptions.url, patchOptions.data, patchOptions)
     .then(result => res.send(result))
