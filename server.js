@@ -61,7 +61,7 @@ app.post("/charge", async (req, res) => {
 });
 
 
-app.post("/update", async (req, res) => {
+app.post("/update", (req, res) => {
   const response = req.body
   console.log("body", req.body)
   var token ="";
@@ -88,12 +88,12 @@ app.post("/update", async (req, res) => {
       app_metadata: {
         books: response.bookIds
       }
-    }, patchOptions)
+    }, patchOptions.headers)
     .then(result => res.send(result))
     .catch(err => res.status(500).json(err))
   })
   .then(result => res.send(result))
-  .catch(err => res.status(500).json(err))
+  .catch(err => console.log("there's an error", err))
 })
 
 
