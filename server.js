@@ -81,22 +81,18 @@ app.post("/update", async (req, res) => {
   try {
     const result = await axios.post(url, data,options)
     token = await result.data["access_token"]
-    console.log(token)
   } 
   catch(e) {
     console.log("error in the post request", e.message)
   }
   try {
-    var patchOptions = {
-      url: `https://athena.au.auth0.com/api/v2/users/${response.userId}`,
-      headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    }
+    const headers = { Authorization: `Bearer ${token}` }
     const result = await axios.patch(`https://athena.au.auth0.com/api/v2/users/${response.userId}`, {
       app_metadata: {
         books: response.bookIds
       }
-    }, patchOptions.headers)
-    console.log("patch requst successfuly", result)
+    }, headers)
+    console.log("patch request successful", result)
   } 
   catch(e) {
     console.log("error in the patch request", e.message)
