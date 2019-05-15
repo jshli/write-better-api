@@ -61,7 +61,7 @@ app.post("/charge", async (req, res) => {
 });
 
 
-app.post("/update", (req, res) => {
+app.post("/update", async (req, res) => {
   const response = req.body
   console.log("body", req.body)
   var token ="";
@@ -77,23 +77,44 @@ app.post("/update", (req, res) => {
     "audience":"https://athena.au.auth0.com/api/v2/",
     "grant_type":"client_credentials" 
   }
-  axios.post(url, data, options)
-  .then(result => {
-    token = result.data["access_token"]
+
+  try {
+    const result = await axios.post(url, data,options)
+    token = await result.data["access_token"]
+  } catch(e) {
+    console.log("error in the post request", e)
+  }
+  try {
     var patchOptions = {
       url: `https://athena.au.auth0.com/api/v2/users/${response.userId}`,
       headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
     }
-    return axios.patch(patchOptions.url, {
+    const result = await axios.patch(`https://athena.au.auth0.com/api/v2/users/${response.userId}`, {
       app_metadata: {
         books: response.bookIds
       }
     }, patchOptions.headers)
-    .then(result => res.send(result))
-    .catch(err => res.status(500).json(err))
-  })
-  .then(result => res.send(result))
-  .catch(err => console.log("there's an error", err))
+    console.log("patch requst successfuly", result)
+  }catch(e) {
+    console.log("error in the patch request", e)
+  }
+  // axios.post(url, data, options)
+  // .then(result => {
+  //   token = result.data["access_token"]
+  //   var patchOptions = {
+  //     url: `https://athena.au.auth0.com/api/v2/users/${response.userId}`,
+  //     headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+  //   }
+  //   return axios.patch(patchOptions.url, {
+  //     app_metadata: {
+  //       books: response.bookIds
+  //     }
+  //   }, patchOptions.headers)
+  //   .then(result => res.send(result))
+  //   .catch(err => res.status(500).json(err))
+  // })
+  // .then(result => res.send(result))
+  // .catch(err => console.log("there's an error", err))
 })
 
 
