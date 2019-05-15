@@ -83,17 +83,17 @@ app.post("/update", async (req, res) => {
     token = result.data["access_token"]
     var patchOptions = {
       url: `https://athena.au.auth0.com/api/v2/users/${response.userId}`,
-      headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' }
+      headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
     }
-    axios.patch(patchOptions.url, {
+    return axios.patch(patchOptions.url, {
       app_metadata: {
         books: response.bookIds
       }
     }, patchOptions)
     .then(result => res.send(result))
-    .catch(err => res.status(500).json({err: "no it errors here"}))
+    .catch(err => res.status(500).json(err))
   })
-  .catch(err => res.status(500).json({err: "it errors here"}))
+  .catch(err => res.status(500).json(err))
 })
 
 
