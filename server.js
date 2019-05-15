@@ -62,7 +62,7 @@ app.post("/charge", async (req, res) => {
 
 
 app.post("/update", async (req, res) => {
-  const response = JSON.parse(req.body)
+  const response = req.body
   console.log(req.body)
   var token ="";
   const url = 'https://athena.au.auth0.com/oauth/token';
@@ -88,7 +88,7 @@ app.post("/update", async (req, res) => {
     }
     axios.patch(patchOptions.url, patchOptions.data, patchOptions)
     .then(result => res.send(result))
-    .catch(err => res.status(500))
+    .catch(err => res.status(500).end())
   })
   .catch(err => res.status(500).json({err: err}))
 })
