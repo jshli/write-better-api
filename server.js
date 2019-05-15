@@ -95,7 +95,7 @@ app.post("/update", async (req, res) => {
     console.log("patch request successful", result)
   } 
   catch(e) {
-    console.log("error in the patch request", e.message)
+    console.log("error in the patch request", e)
   }
   
 })
