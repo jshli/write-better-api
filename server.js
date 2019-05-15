@@ -86,7 +86,11 @@ app.post("/update", async (req, res) => {
       headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
       data: `{"app_metadata": {"books":${response.bookIds}}}`
     }
-    axios.patch(patchOptions.url, patchOptions.data, patchOptions)
+    axios.patch(patchOptions.url, {
+      app_metadata: {
+        books: response.bookIds
+      }
+    }, patchOptions)
     .then(result => res.send(result))
     .catch(err => res.status(500).json({err: err}))
   })
