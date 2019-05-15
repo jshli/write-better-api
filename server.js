@@ -86,7 +86,7 @@ app.post("/update", async (req, res) => {
     console.log("error in the post request", e.message)
   }
   try {
-    const headers = { Authorization: `Bearer ${token}` }
+    const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' }
     const result = await axios.patch(`https://athena.au.auth0.com/api/v2/users/${response.userId}`, {
       app_metadata: {
         books: response.bookIds
