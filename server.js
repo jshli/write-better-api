@@ -67,7 +67,7 @@ app.post("/update", async (req, res) => {
   const response = req.body
   const params = {id: response.userId};
   var metadata = {
-    books: response.bookIds
+    books: response.books
   }
   auth0.updateAppMetadata(params, metadata, function(err, user) {
     if (err) {
@@ -76,5 +76,21 @@ app.post("/update", async (req, res) => {
     res.send(user)
   })
 })
+
+
+app.post('/save-book-location', async (req, res) => {
+  const response = req.body
+  const params = {id: response.userId}
+  var metadata = { 
+    books: response.books
+  }
+  auth0.updateAppMetadata(params,metadata, function(err, user) {
+    if (err) {
+      return res.status(500).json({error:err})
+    }
+    res.send(user)
+  })
+})
+
 
 app.listen((process.env.PORT || 9000), () => console.log("Listening on port 9000"))
