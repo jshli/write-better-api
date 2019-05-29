@@ -71,11 +71,13 @@ app.post("/update", async (req, res) => {
   }
   auth0.updateAppMetadata(params, metadata, function(err, user) {
     if (err) {
+      console.log(err)
       return res.status(500).json({error: err})
     }
     res.send(user)
   })
 })
+
 
 
 app.post('/save-book-location', async (req, res) => {
