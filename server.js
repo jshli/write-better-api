@@ -38,6 +38,7 @@ app.get("/", (req, res) => {
 
 app.post("/charge", async (req, res) => {
   var request = req.body;
+  console.log(request)
   var totalAmount = 0;
   try {
     const entries = await client.getEntries({
@@ -54,8 +55,9 @@ app.post("/charge", async (req, res) => {
     const response = await stripe.charges.create({
       amount: totalAmount,
       currency: "aud",
-      description: "An example charge",
-      source: request.token
+      description: `Purchase from Writelabs`,
+      source: request.token,
+      receipt_email: request.email
     })
     res.send(response)
   } catch(e) {
