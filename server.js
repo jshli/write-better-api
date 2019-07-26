@@ -1,100 +1,157 @@
 require('dotenv').config()
-const app = require("express")();
-const stripe = require("stripe")(process.env.STRIPE_KEY)
-var contentful = require('contentful');
-const axios = require("axios");
-var bodyParser = require('body-parser')
-var ManagementClient = require('auth0').ManagementClient;
+const app = require('express')()
+const stripe = require('stripe')(process.env.STRIPE_KEY)
+const contentful = require('contentful')
+const contentfulManagement = require('contentful-management')
+const bodyParser = require('body-parser')
+const Hubspot = require('hubspot')
 
-var client = contentful.createClient({
+const ManagementClient = require('auth0').ManagementClient
+
+const client = contentful.createClient({
   space: process.env.CONTENTFUL_SPACE_ID,
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN
 })
 
-var auth0 = new ManagementClient({
+const managementClient = contentfulManagement.createClient({
+  accessToken: process.env.CONTENTFUL_MANAGEMENT_TOKEN
+})
+
+const auth0 = new ManagementClient({
   domain: `athena.au.auth0.com`,
   clientId: process.env.AUTH0_CLIENT_ID,
   clientSecret: process.env.AUTH0_CLIENT_SECRET,
-  scope: "read:users update:users update:users_app_metadata read:users_app_metadata",
-  audience: "https://athena.au.auth0.com/api/v2/",
+  scope:
+    'read:users update:users update:users_app_metadata read:users_app_metadata',
+  audience: 'https://athena.au.auth0.com/api/v2/',
   tokenProvider: {
     enableCache: true,
     cacheTTLInSeconds: 10
   }
 })
 
-app.use(bodyParser.json());
-
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
-
-app.get("/", (req, res) => {
-  res.send("Hello world")
+const hubspot = new Hubspot({
+  apiKey: process.env.HUBSPOT_API_KEY
 })
 
-app.post("/charge", async (req, res) => {
-  var request = req.body;
-  console.log(request)
-  var totalAmount = 0;
+app.use(bodyParser.json())
+
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET,PUT,PATCH,POST,DELETE,OPTIONS'
+  )
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  )
+  next()
+})
+
+app.get('/', (req, res) => {
+  res.send('Hello world')
+})
+
+app.post('/charge', async (req, res) => {
+  var request = req.body
+  var totalAmount = 0
   try {
     const entries = await client.getEntries({
-      content_type:'book',
+      content_type: 'book'
     })
     totalAmount = entries.items
       .filter(item => request.items.includes(item.fields.title))
-      .map(item => Math.round(Number(item.fields.price)*100))
-      .reduce((acc, val) => acc + val);
-  } catch(e) {
-    return res.status(500).json({error: e})
+      .map(item => Math.round(Number(item.fields.price) * 100))
+      .reduce((acc, val) => acc + val)
+  } catch (e) {
+    return res.status(500).json({ error: e })
   }
   try {
     const response = await stripe.charges.create({
       amount: totalAmount,
-      currency: "aud",
+      currency: 'aud',
       description: `Purchase from Writelabs`,
       source: request.token,
       receipt_email: request.email
     })
     res.send(response)
-  } catch(e) {
-    return res.status(402).json({error: e.message})
+  } catch (e) {
+    return res.status(402).json({ error: e.message })
   }
-});
+})
 
-app.post("/update", async (req, res) => {
+app.post('/update', async (req, res) => {
   const response = req.body
-  const params = {id: response.userId};
+  const params = { id: response.userId }
   var metadata = {
     books: response.books
   }
   auth0.updateAppMetadata(params, metadata, function(err, user) {
     if (err) {
       console.log(err)
-      return res.status(500).json({error: err})
+      return res.status(500).json({ error: err })
     }
     res.send(user)
   })
 })
-
-
 
 app.post('/save-book-location', async (req, res) => {
   const response = req.body
-  const params = {id: response.userId}
-  var metadata = { 
+  const params = { id: response.userId }
+  var metadata = {
     books: response.books
   }
-  auth0.updateAppMetadata(params,metadata, function(err, user) {
+  auth0.updateAppMetadata(params, metadata, function(err, user) {
     if (err) {
-      return res.status(500).json({error:err})
+      return res.status(500).json({ error: err })
     }
     res.send(user)
   })
 })
 
+app.post('/create-review', async (req, res) => {
+  const response = req.body
+  managementClient
+    .getSpace(process.env.CONTENTFUL_SPACE_ID)
+    .then(space =>
+      space.createEntry('reviews', {
+        fields: {
+          rating: {
+            'en-US': response.rating
+          },
+          review: {
+            'en-US': response.review
+          },
+          name: {
+            'en-US': response.name
+          },
+          date: {
+            'en-US': new Date()
+          },
+          book: {
+            'en-US': {
+              sys: {
+                type: 'Link',
+                linkType: 'Entry',
+                id: response.book
+              }
+            }
+          }
+        }
+      })
+    )
+    .then(entry => {
+      managementClient
+        .getSpace(process.env.CONTENTFUL_SPACE_ID)
+        .then(space => space.getEntry(entry.sys.id))
+        .then(entry => entry.publish())
+        .then(response => res.send(response))
+        .catch(error => console.log(error))
+    })
+    .catch(console.error)
+})
 
-app.listen((process.env.PORT || 9000), () => console.log("Listening on port 9000"))
+app.listen(process.env.PORT || 9000, () =>
+  console.log('Listening on port 9000')
+)
