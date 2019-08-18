@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
 
 app.post('/charge', async (req, res) => {
   var request = req.body
-  var totalAmount = 0
+  let totalAmount = 0
   try {
     const entries = await client.getEntries({
       content_type: 'book'
@@ -64,6 +64,21 @@ app.post('/charge', async (req, res) => {
       .filter(item => request.items.includes(item.fields.title))
       .map(item => Math.round(Number(item.fields.price) * 100))
       .reduce((acc, val) => acc + val)
+  } catch (e) {
+    return res.status(500).json({ error: e })
+  }
+  try {
+    const coupons = await client.getEntries({
+      content_type: 'couponCode'
+    })
+    const activeCoupon = coupons.items.find(
+      coupon => coupon.fields.code === req.body.coupon.code
+    )
+    if (activeCoupon) {
+      totalAmount =
+        totalAmount * ((100 - activeCoupon.fields.discountAmount) / 100)
+      console.log(totalAmount)
+    }
   } catch (e) {
     return res.status(500).json({ error: e })
   }
@@ -79,6 +94,7 @@ app.post('/charge', async (req, res) => {
   } catch (e) {
     return res.status(402).json({ error: e.message })
   }
+  console.log(totalAmount)
 })
 
 app.post('/update', async (req, res) => {
