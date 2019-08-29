@@ -5,6 +5,13 @@ const contentful = require('contentful')
 const contentfulManagement = require('contentful-management')
 const bodyParser = require('body-parser')
 const Hubspot = require('hubspot')
+const sgMail = require('@sendgrid/mail')
+const Sentry = require('@sentry/node')
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+Sentry.init({
+  dsn: 'https://4d2d27dd1a054a699a0928fd874be3fc@sentry.io/1545477'
+})
 
 const ManagementClient = require('auth0').ManagementClient
 
@@ -77,7 +84,6 @@ app.post('/charge', async (req, res) => {
     if (activeCoupon) {
       totalAmount =
         totalAmount * ((100 - activeCoupon.fields.discountAmount) / 100)
-      console.log(totalAmount)
     }
   } catch (e) {
     return res.status(500).json({ error: e })
@@ -91,10 +97,20 @@ app.post('/charge', async (req, res) => {
       receipt_email: request.email
     })
     res.send(response)
+    const msg = {
+      to: 'joshxli.io@gmail.com',
+      from: 'lisachentran@gmail.com',
+      subject: 'Yay, new purchase! 🥳',
+      // text: 'and easy to do anywhere, even with Node.js',
+      html: `<p>New purchase made by a ${request.email}</>. 
+      <ul>
+   
+      </ul>`
+    }
+    sgMail.send(msg)
   } catch (e) {
     return res.status(402).json({ error: e.message })
   }
-  console.log(totalAmount)
 })
 
 app.post('/update', async (req, res) => {
